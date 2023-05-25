@@ -48,7 +48,7 @@ include(FetchContent)
 
 FetchContent_Declare(
         libcapture
-        GIT_REPOSITORY https://github.com/giulio98/libcapture.git
+        GIT_REPOSITORY https://github.com/lulor/libcapture.git
 )
 FetchContent_MakeAvailable(libcapture)
 # create your executable 
@@ -71,7 +71,7 @@ include(FetchContent)
 
 FetchContent_Declare(
         libcapture
-        GIT_REPOSITORY https://github.com/giulio98/libcapture.git
+        GIT_REPOSITORY https://github.com/lulor/libcapture.git
 )
 FetchContent_MakeAvailable(libcapture)
 add_executable(myexe main.cpp)
