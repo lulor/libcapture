@@ -15,7 +15,7 @@ class Demuxer {
     av::InFormatContextUPtr fmt_ctx_;
     std::string device_name_;
     std::map<std::string, std::string> options_;
-    std::array<const AVStream *, av::MediaType::NumTypes> streams_{};
+    std::array<const AVStream *, av::MediaType::NUM_TYPES> streams_{};
     av::PacketUPtr packet_;
 
     friend void swap(Demuxer &lhs, Demuxer &rhs);

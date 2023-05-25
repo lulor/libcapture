@@ -9,8 +9,8 @@
 class Muxer {
     av::FormatContextUPtr fmt_ctx_;
     std::string filename_;
-    std::array<const AVStream *, av::MediaType::NumTypes> streams_{};
-    std::array<AVRational, av::MediaType::NumTypes> encoders_time_bases_{};
+    std::array<const AVStream *, av::MediaType::NUM_TYPES> streams_{};
+    std::array<AVRational, av::MediaType::NUM_TYPES> encoders_time_bases_{};
     bool file_inited_{};
     bool file_finalized_{};
 

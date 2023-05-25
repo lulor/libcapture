@@ -16,20 +16,20 @@
 class Pipeline {
     const bool async_;
 
-    std::array<bool, av::MediaType::NumTypes> managed_types_{};
-    std::array<Decoder, av::MediaType::NumTypes> decoders_;
-    std::array<Encoder, av::MediaType::NumTypes> encoders_;
-    std::array<Converter, av::MediaType::NumTypes> converters_;
+    std::array<bool, av::MediaType::NUM_TYPES> managed_types_{};
+    std::array<Decoder, av::MediaType::NUM_TYPES> decoders_;
+    std::array<Encoder, av::MediaType::NUM_TYPES> encoders_;
+    std::array<Converter, av::MediaType::NUM_TYPES> converters_;
     Muxer muxer_;
     std::mutex muxer_m_;
 
     bool terminated_{};
 
     std::mutex processors_m_;
-    std::array<std::thread, av::MediaType::NumTypes> processors_;
-    std::array<av::PacketUPtr, av::MediaType::NumTypes> packets_;
-    std::array<std::condition_variable, av::MediaType::NumTypes> packets_cv_;
-    std::array<std::exception_ptr, av::MediaType::NumTypes> e_ptrs_;
+    std::array<std::thread, av::MediaType::NUM_TYPES> processors_;
+    std::array<av::PacketUPtr, av::MediaType::NUM_TYPES> packets_;
+    std::array<std::condition_variable, av::MediaType::NUM_TYPES> packets_cv_;
+    std::array<std::exception_ptr, av::MediaType::NUM_TYPES> e_ptrs_;
     void startProcessor(av::MediaType media_type);
     /* Stop and join the processor threads */
     void stopProcessors();
