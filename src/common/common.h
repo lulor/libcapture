@@ -39,7 +39,7 @@ const std::array<MediaType, MediaType::NUM_TYPES> validMediaTypes = {MediaType::
  * @param type the data type to check
  * @return whether the data type is a valid one
  */
-constexpr bool isMediaTypeValid(MediaType type) { return (type > MediaType::None && type < MediaType::NUM_TYPES); }
+inline bool isMediaTypeValid(MediaType type) { return (type > MediaType::None && type < MediaType::NUM_TYPES); }
 
 using PacketUPtr = std::unique_ptr<AVPacket, DeleterPP<av_packet_free>>;
 using FrameUPtr = std::unique_ptr<AVFrame, DeleterPP<av_frame_free>>;
