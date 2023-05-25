@@ -153,13 +153,13 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
     const AVCodecID video_codec_id = AV_CODEC_ID_H264;
     const AVCodecID audio_codec_id = AV_CODEC_ID_AAC;
 
-    Demuxer demuxer;
-    std::optional<Demuxer> audio_demuxer;  // Linux only
+    av::Demuxer demuxer;
+    std::optional<av::Demuxer> audio_demuxer;  // Linux only
 
     { /* init Demuxer */
         std::string device_name = generateInputDeviceName(video_device, audio_device, video_params);
         std::map<std::string, std::string> demuxer_options = generateDemuxerOptions(video_params);
-        demuxer = Demuxer(getInputFormatName(), std::move(device_name), std::move(demuxer_options));
+        demuxer = av::Demuxer(getInputFormatName(), std::move(device_name), std::move(demuxer_options));
         demuxer.openInput();
     }
 
@@ -263,7 +263,7 @@ void Capturer::resume() {
     cv_.notify_all();
 }
 
-void Capturer::capture(Demuxer &video_demuxer, Demuxer &audio_demuxer) {
+void Capturer::capture(av::Demuxer &video_demuxer, av::Demuxer &audio_demuxer) {
     std::thread audio_capturer;
     std::exception_ptr e_ptr;
 
@@ -271,7 +271,7 @@ void Capturer::capture(Demuxer &video_demuxer, Demuxer &audio_demuxer) {
         ThreadGuard tg(audio_capturer);
 
         audio_capturer = std::thread(
-            [this, &e_ptr](Demuxer &audio_demuxer) {
+            [this, &e_ptr](av::Demuxer &audio_demuxer) {
                 try {
                     capture(audio_demuxer);
                 } catch (...) {
@@ -292,7 +292,7 @@ void Capturer::capture(Demuxer &video_demuxer, Demuxer &audio_demuxer) {
     if (e_ptr) std::rethrow_exception(e_ptr);
 }
 
-void Capturer::capture(Demuxer &demuxer) {
+void Capturer::capture(av::Demuxer &demuxer) {
     bool after_pause;
     int64_t last_pts = 0;
     int64_t pts_offset = 0;
@@ -359,7 +359,7 @@ void Capturer::listAvailableDevices() const {
     dummy_device_name = "dummy";
 #endif
 
-    Demuxer demuxer(getInputFormatName(), dummy_device_name, options);
+    av::Demuxer demuxer(getInputFormatName(), dummy_device_name, options);
     std::cout << "##### Available Devices #####" << std::endl;
     {
         LogLevelSetter lls(AV_LOG_INFO);

@@ -6,6 +6,8 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Demuxer {
 #ifdef FFMPEG_5
     const AVInputFormat *fmt_{};
@@ -92,3 +94,5 @@ public:
      */
     void printInfo(int index = 0) const;
 };
+
+}  // namespace av

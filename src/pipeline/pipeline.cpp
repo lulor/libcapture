@@ -54,7 +54,7 @@ void Pipeline::checkExceptions() {
     }
 }
 
-void Pipeline::initVideo(const Demuxer &demuxer, const AVCodecID codec_id, const AVPixelFormat pix_fmt,
+void Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, const AVPixelFormat pix_fmt,
                          const VideoParameters &video_params) {
     const auto type = av::MediaType::Video;
 
@@ -97,7 +97,7 @@ void Pipeline::initVideo(const Demuxer &demuxer, const AVCodecID codec_id, const
     if (async_) startProcessor(type);
 }
 
-void Pipeline::initAudio(const Demuxer &demuxer, const AVCodecID codec_id) {
+void Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
     const auto type = av::MediaType::Audio;
 
     if (muxer_.isInited()) throw std::logic_error(errMsg("output has already been initialized"));
