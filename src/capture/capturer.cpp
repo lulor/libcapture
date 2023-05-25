@@ -135,7 +135,7 @@ Capturer::~Capturer() {
 }
 
 void Capturer::stopCapture() {
-    std::lock_guard lg(m_);
+    const std::lock_guard lg(m_);
     stopped_ = true;
     cv_.notify_all();
 }
@@ -214,7 +214,7 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
          * To avoid an immediate return from capture(), a lock on the mutex m_ must be acquired
          */
 
-        std::lock_guard lg(m_);
+        const std::lock_guard lg(m_);
 
         capturer_ = std::thread(
             [this, demuxer = std::move(demuxer), audio_demuxer = std::move(audio_demuxer), p = std::move(p)]() mutable {
@@ -250,7 +250,7 @@ void Capturer::stop() {
 void Capturer::pause() {
     if (stopped_) throw std::runtime_error("Failed to pause the recording: capturer is stopped");
     if (paused_) throw std::runtime_error("Failed to pause the recording: capturer already paused");
-    std::lock_guard lg(m_);
+    const std::lock_guard lg(m_);
     paused_ = true;
     cv_.notify_all();
 }
@@ -258,7 +258,7 @@ void Capturer::pause() {
 void Capturer::resume() {
     if (stopped_) throw std::runtime_error("Failed to resume the recording: capturer is stopped");
     if (!paused_) throw std::runtime_error("Failed to resume the recording: capturer already running");
-    std::lock_guard lg(m_);
+    const std::lock_guard lg(m_);
     paused_ = false;
     cv_.notify_all();
 }
@@ -268,7 +268,7 @@ void Capturer::capture(av::Demuxer &video_demuxer, av::Demuxer &audio_demuxer) {
     std::exception_ptr e_ptr;
 
     {
-        ThreadGuard tg(audio_capturer);
+        const ThreadGuard tg(audio_capturer);
 
         audio_capturer = std::thread(
             [this, &e_ptr](av::Demuxer &audio_demuxer) {
@@ -351,7 +351,7 @@ void Capturer::setVerbose(const bool verbose) {
 }
 
 void Capturer::listAvailableDevices() const {
-    std::string dummy_device_name;
+    const std::string dummy_device_name;
     std::map<std::string, std::string> options;
     options.insert({"list_devices", "true"});
 
@@ -362,7 +362,7 @@ void Capturer::listAvailableDevices() const {
     av::Demuxer demuxer(getInputFormatName(), dummy_device_name, options);
     std::cout << "##### Available Devices #####" << std::endl;
     {
-        LogLevelSetter lls(AV_LOG_INFO);
+        const LogLevelSetter lls(AV_LOG_INFO);
         demuxer.openInput(true);
     }
     std::cout << std::endl;

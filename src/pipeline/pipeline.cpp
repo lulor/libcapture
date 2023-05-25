@@ -31,7 +31,7 @@ void Pipeline::startProcessor(const av::MediaType type) {
                 processPacket(packet.get(), type);
             }
         } catch (...) {
-            std::lock_guard lg(processors_m_);
+            const std::lock_guard lg(processors_m_);
             e_ptrs_[type] = std::current_exception();
         }
     });
@@ -39,7 +39,7 @@ void Pipeline::startProcessor(const av::MediaType type) {
 
 void Pipeline::stopProcessors() {
     {
-        std::lock_guard lg(processors_m_);
+        const std::lock_guard lg(processors_m_);
         terminated_ = true;
         for (auto &cv : packets_cv_) cv.notify_all();
     }
@@ -175,7 +175,7 @@ void Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType t
         while (true) {
             auto packet = encoder.getPacket();
             if (!packet) break;
-            std::lock_guard lg(muxer_m_);
+            const std::lock_guard lg(muxer_m_);
             muxer_.writePacket(std::move(packet), type);
         }
     }
@@ -190,7 +190,7 @@ void Pipeline::feed(av::PacketUPtr packet, const av::MediaType packet_type) {
         throw std::logic_error(errMsg("received media type is not handled by the pipeline"));
 
     if (async_) {
-        std::lock_guard lg(processors_m_);
+        const std::lock_guard lg(processors_m_);
         checkExceptions();
         if (!packets_[packet_type]) {  // if previous packet has been fully processed
             packets_[packet_type] = std::move(packet);
