@@ -172,7 +172,7 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
         async = capture_audio;
 #endif
         /* init Pipeline */
-        pipeline_ = std::make_unique<Pipeline>(output_file, async);
+        pipeline_ = std::make_unique<av::Pipeline>(output_file, async);
     }
 
     pipeline_->initVideo(demuxer, video_codec_id, video_pix_fmt, video_params);

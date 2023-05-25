@@ -13,6 +13,8 @@
 #include "process/encoder.h"
 #include "video_parameters.h"
 
+namespace av {
+
 class Pipeline {
     const bool async_;
 
@@ -99,3 +101,5 @@ public:
      */
     void printInfo() const;
 };
+
+}  // namespace av

@@ -6,13 +6,13 @@
 
 static std::string errMsg(const std::string &msg) { return ("Pipeline: " + msg); }
 
-Pipeline::Pipeline(const std::string &output_file, const bool async) : muxer_(output_file), async_(async) {}
+av::Pipeline::Pipeline(const std::string &output_file, const bool async) : muxer_(output_file), async_(async) {}
 
-Pipeline::~Pipeline() {
+av::Pipeline::~Pipeline() {
     if (async_ && !terminated_) stopProcessors();
 }
 
-void Pipeline::startProcessor(const av::MediaType type) {
+void av::Pipeline::startProcessor(const av::MediaType type) {
     assert(!terminated_);
     assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
@@ -37,7 +37,7 @@ void Pipeline::startProcessor(const av::MediaType type) {
     });
 }
 
-void Pipeline::stopProcessors() {
+void av::Pipeline::stopProcessors() {
     {
         const std::lock_guard lg(processors_m_);
         terminated_ = true;
@@ -48,14 +48,14 @@ void Pipeline::stopProcessors() {
     }
 }
 
-void Pipeline::checkExceptions() {
+void av::Pipeline::checkExceptions() {
     for (auto &e_ptr : e_ptrs_) {
         if (e_ptr) std::rethrow_exception(e_ptr);
     }
 }
 
-void Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, const AVPixelFormat pix_fmt,
-                         const VideoParameters &video_params) {
+void av::Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, const AVPixelFormat pix_fmt,
+                             const VideoParameters &video_params) {
     const auto type = av::MediaType::Video;
 
     if (muxer_.isInited()) throw std::logic_error(errMsg("output has already been initialized"));
@@ -97,7 +97,7 @@ void Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, c
     if (async_) startProcessor(type);
 }
 
-void Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
+void av::Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
     const auto type = av::MediaType::Audio;
 
     if (muxer_.isInited()) throw std::logic_error(errMsg("output has already been initialized"));
@@ -131,13 +131,13 @@ void Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
     if (async_) startProcessor(type);
 }
 
-void Pipeline::initOutput() {
+void av::Pipeline::initOutput() {
     if (muxer_.isInited()) throw std::logic_error(errMsg("output has already been initialized"));
     if (terminated_) throw std::logic_error(errMsg("already terminated"));
     muxer_.initFile();
 }
 
-void Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
+void av::Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
     assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
 
@@ -162,7 +162,7 @@ void Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
     }
 }
 
-void Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType type) {
+void av::Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType type) {
     assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
 
@@ -181,7 +181,7 @@ void Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType t
     }
 }
 
-void Pipeline::feed(av::PacketUPtr packet, const av::MediaType packet_type) {
+void av::Pipeline::feed(av::PacketUPtr packet, const av::MediaType packet_type) {
     if (!packet) throw std::invalid_argument(errMsg("received packet is null"));
     if (!av::isMediaTypeValid(packet_type)) throw std::invalid_argument(errMsg("received media type is invalid"));
     if (!muxer_.isInited()) throw std::logic_error(errMsg("the output file hasn't been initialized yet"));
@@ -201,7 +201,7 @@ void Pipeline::feed(av::PacketUPtr packet, const av::MediaType packet_type) {
     }
 }
 
-void Pipeline::terminate() {
+void av::Pipeline::terminate() {
     if (!muxer_.isInited()) throw std::logic_error(errMsg("the output file hasn't been initialized yet"));
     if (terminated_) throw std::logic_error(errMsg("already terminated"));
 
@@ -224,7 +224,7 @@ void Pipeline::terminate() {
     muxer_.finalizeFile();
 }
 
-void Pipeline::printInfo() const {
+void av::Pipeline::printInfo() const {
     muxer_.printInfo();
     for (auto type : av::validMediaTypes) {
         if (managed_types_[type]) {

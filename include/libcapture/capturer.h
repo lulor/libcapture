@@ -12,8 +12,8 @@
 
 namespace av {
 class Demuxer;
-}
 class Pipeline;
+}  // namespace av
 
 class Capturer {
     /* Whether the recorder should be verbose or not */
@@ -28,7 +28,7 @@ class Capturer {
     std::thread capturer_;
 
     /* The pipeline used for audio/video processing */
-    std::unique_ptr<Pipeline> pipeline_;
+    std::unique_ptr<av::Pipeline> pipeline_;
 
     /**
      * Read packets from a demuxer and pass them to the processing pipeline
