@@ -6,6 +6,8 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Muxer {
     av::FormatContextUPtr fmt_ctx_;
     std::string filename_;
@@ -74,3 +76,5 @@ public:
      */
     [[nodiscard]] int getGlobalHeaderFlags() const;
 };
+
+}  // namespace av
