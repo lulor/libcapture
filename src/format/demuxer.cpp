@@ -5,7 +5,9 @@
 
 #define VERBOSE 0  // TO-DO: improve
 
-static std::string errMsg(const std::string &msg) { return ("Demuxer: " + msg); }
+namespace {
+std::string errMsg(const std::string &msg) { return ("Demuxer: " + msg); }
+}  // namespace
 
 namespace av {
 void swap(Demuxer &lhs, Demuxer &rhs) {

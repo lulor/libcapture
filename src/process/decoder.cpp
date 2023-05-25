@@ -2,7 +2,9 @@
 
 #include <stdexcept>
 
-static std::string errMsg(const std::string &msg) { return ("Decoder: " + msg); }
+namespace {
+std::string errMsg(const std::string &msg) { return ("Decoder: " + msg); }
+}  // namespace
 
 namespace av {
 void swap(Decoder &lhs, Decoder &rhs) {

@@ -19,7 +19,9 @@
 
 #define THROW_TEST_EXCEPTION 0  // TO-DO: remove
 
-static void makeAvVerbose(const bool verbose) {
+namespace {
+
+void makeAvVerbose(const bool verbose) {
     if (verbose) {
         av_log_set_level(AV_LOG_VERBOSE);
         // av_log_set_level(AV_LOG_DEBUG);
@@ -28,7 +30,7 @@ static void makeAvVerbose(const bool verbose) {
     }
 }
 
-static std::string getInputFormatName(bool audio = false) {
+std::string getInputFormatName(bool audio = false) {
 #if defined(LINUX)
     if (audio) {
         return "alsa";
@@ -42,8 +44,8 @@ static std::string getInputFormatName(bool audio = false) {
 #endif
 }
 
-static std::string generateInputDeviceName(const std::string &video_device, const std::string &audio_device,
-                                           const VideoParameters &video_params) {
+std::string generateInputDeviceName(const std::string &video_device, const std::string &audio_device,
+                                    const VideoParameters &video_params) {
     std::stringstream device_name_ss;
 #if defined(WINDOWS)
     if (!audio_device.empty()) device_name_ss << "audio=" << audio_device << ":";
@@ -65,7 +67,7 @@ static std::string generateInputDeviceName(const std::string &video_device, cons
 }
 
 #ifdef WINDOWS
-static void setDisplayResolution(int framerate) {
+void setDisplayResolution(int framerate) {
     int x1, y1, x2, y2, resolution_width, resolution_height;
     x1 = GetSystemMetrics(SM_XVIRTUALSCREEN);
     y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
@@ -97,7 +99,7 @@ static void setDisplayResolution(int framerate) {
 }
 #endif
 
-static std::map<std::string, std::string> generateDemuxerOptions(const VideoParameters &video_params) {
+std::map<std::string, std::string> generateDemuxerOptions(const VideoParameters &video_params) {
     std::map<std::string, std::string> demuxer_options;
 #ifdef WINDOWS
     setDisplayResolution(video_params.getFramerate());
@@ -123,6 +125,8 @@ static std::map<std::string, std::string> generateDemuxerOptions(const VideoPara
 #endif
     return demuxer_options;
 }
+
+}  // namespace
 
 Capturer::Capturer(const bool verbose) : verbose_(verbose) {
     makeAvVerbose(verbose_);

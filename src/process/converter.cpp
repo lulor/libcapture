@@ -2,10 +2,12 @@
 
 #include <sstream>
 
-static std::string errMsg(const std::string &msg) { return ("Converter: " + msg); }
+namespace {
+
+std::string errMsg(const std::string &msg) { return ("Converter: " + msg); }
 
 #ifdef FFMPEG_5
-static std::string getChLayoutDescription(const AVChannelLayout *channel_layout) {
+std::string getChLayoutDescription(const AVChannelLayout *channel_layout) {
     char buf[64];
     const int ret = av_channel_layout_describe(channel_layout, buf, sizeof(buf));
     if (ret < 0) throw std::runtime_error(errMsg("Error obtaining ch_layout description"));
@@ -14,18 +16,8 @@ static std::string getChLayoutDescription(const AVChannelLayout *channel_layout)
 }
 #endif
 
-namespace av {
-void swap(Converter &lhs, Converter &rhs) {
-    std::swap(lhs.filter_graph_, rhs.filter_graph_);
-    std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
-    std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
-    std::swap(lhs.frame_, rhs.frame_);
-}
-}  // namespace av
-
-static std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecContext *dec_ctx,
-                                                              const AVCodecContext *enc_ctx,
-                                                              const AVRational in_time_base) {
+std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx,
+                                                       const AVRational in_time_base) {
     std::stringstream src_args_ss;
     src_args_ss << "time_base=" << in_time_base.num << "/" << in_time_base.den;
     src_args_ss << ":sample_rate=" << dec_ctx->sample_rate;
@@ -65,10 +57,9 @@ static std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecConte
     return std::make_pair(src_args_ss.str(), filter_spec_ss.str());
 }
 
-static std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecContext *dec_ctx,
-                                                              const AVCodecContext *enc_ctx,
-                                                              const AVRational in_time_base, const int offset_x,
-                                                              const int offset_y) {
+std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx,
+                                                       const AVRational in_time_base, const int offset_x,
+                                                       const int offset_y) {
     std::stringstream src_args_ss;
     src_args_ss << "video_size=" << dec_ctx->width << "x" << dec_ctx->height;
     src_args_ss << ":pix_fmt=" << dec_ctx->pix_fmt;
@@ -85,6 +76,17 @@ static std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecConte
 
     return std::make_pair(src_args_ss.str(), filter_spec_ss.str());
 }
+
+}  // namespace
+
+namespace av {
+void swap(Converter &lhs, Converter &rhs) {
+    std::swap(lhs.filter_graph_, rhs.filter_graph_);
+    std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
+    std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
+    std::swap(lhs.frame_, rhs.frame_);
+}
+}  // namespace av
 
 av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx, const AVRational in_time_base,
                          const int offset_x, const int offset_y) {

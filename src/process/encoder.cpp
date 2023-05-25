@@ -6,7 +6,9 @@
 
 #define VERBOSE 0  // TO-DO: improve
 
-static std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
+namespace {
+std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
+}  // namespace
 
 namespace av {
 void swap(Encoder &lhs, Encoder &rhs) {

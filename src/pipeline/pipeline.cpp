@@ -4,7 +4,9 @@
 #include <iostream>
 #include <map>
 
-static std::string errMsg(const std::string &msg) { return ("Pipeline: " + msg); }
+namespace {
+std::string errMsg(const std::string &msg) { return ("Pipeline: " + msg); }
+}  // namespace
 
 av::Pipeline::Pipeline(const std::string &output_file, const bool async) : muxer_(output_file), async_(async) {}
 
