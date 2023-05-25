@@ -82,14 +82,14 @@ bool av::Demuxer::isInputOpen() const { return (fmt_ctx_ != nullptr); }
 
 const AVCodecParameters *av::Demuxer::getStreamParams(const av::MediaType stream_type) const {
     if (!fmt_ctx_) throw std::logic_error(errMsg("failed to acess stream (input is not open)"));
-    if (!av::validMediaType(stream_type)) throw std::logic_error(errMsg("invalid stream_type received"));
+    if (!av::isMediaTypeValid(stream_type)) throw std::logic_error(errMsg("invalid stream_type received"));
     if (!streams_[stream_type]) throw std::logic_error(errMsg("specified stream not present"));
     return streams_[stream_type]->codecpar;
 }
 
 AVRational av::Demuxer::getStreamTimeBase(const av::MediaType stream_type) const {
     if (!fmt_ctx_) throw std::logic_error(errMsg("failed to acess stream (input is not open)"));
-    if (!av::validMediaType(stream_type)) throw std::logic_error(errMsg("invalid stream_type received"));
+    if (!av::isMediaTypeValid(stream_type)) throw std::logic_error(errMsg("invalid stream_type received"));
     if (!streams_[stream_type]) throw std::logic_error(errMsg("specified stream not present"));
     return streams_[stream_type]->time_base;
 }

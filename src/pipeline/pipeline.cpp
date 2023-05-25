@@ -14,7 +14,7 @@ Pipeline::~Pipeline() {
 
 void Pipeline::startProcessor(const av::MediaType type) {
     assert(!terminated_);
-    assert(av::validMediaType(type));
+    assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
     assert(!processors_[type].joinable());
 
@@ -138,7 +138,7 @@ void Pipeline::initOutput() {
 }
 
 void Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
-    assert(av::validMediaType(type));
+    assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
 
     av::Decoder &decoder = decoders_[type];
@@ -163,7 +163,7 @@ void Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
 }
 
 void Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType type) {
-    assert(av::validMediaType(type));
+    assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
 
     Encoder &encoder = encoders_[type];
@@ -183,7 +183,7 @@ void Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType t
 
 void Pipeline::feed(av::PacketUPtr packet, const av::MediaType packet_type) {
     if (!packet) throw std::invalid_argument(errMsg("received packet is null"));
-    if (!av::validMediaType(packet_type)) throw std::invalid_argument(errMsg("received media type is invalid"));
+    if (!av::isMediaTypeValid(packet_type)) throw std::invalid_argument(errMsg("received media type is invalid"));
     if (!muxer_.isInited()) throw std::logic_error(errMsg("the output file hasn't been initialized yet"));
     if (terminated_) throw std::logic_error(errMsg("has been terminated"));
     if (!managed_types_[packet_type])

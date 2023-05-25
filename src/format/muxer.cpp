@@ -73,7 +73,7 @@ void av::Muxer::writePacket(const av::PacketUPtr packet, const av::MediaType pac
     if (file_finalized_) throw std::logic_error(errMsg("cannot write packet, file has already been finalized"));
 
     if (packet) {
-        if (!av::validMediaType(packet_type)) throw std::invalid_argument(errMsg("received packet of unknown type"));
+        if (!av::isMediaTypeValid(packet_type)) throw std::invalid_argument(errMsg("received packet of unknown type"));
         auto stream = streams_[packet_type];
         if (!stream) throw std::logic_error(errMsg("stream of specified type not present"));
         av_packet_rescale_ts(packet.get(), encoders_time_bases_[packet_type], stream->time_base);
