@@ -8,11 +8,13 @@
 
 static std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
 
-void av::swap(Encoder &lhs, Encoder &rhs) {
+namespace av {
+void swap(Encoder &lhs, Encoder &rhs) {
     std::swap(lhs.codec_, rhs.codec_);
     std::swap(lhs.codec_ctx_, rhs.codec_ctx_);
     std::swap(lhs.packet_, rhs.packet_);
 }
+}  // namespace av
 
 av::Encoder::Encoder(const AVCodecID codec_id) {
 #ifdef MACOS
@@ -37,7 +39,7 @@ av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const AVCh
                      const int global_header_flags, const std::map<std::string, std::string> &options)
 #else
 av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t channel_layout,
-                 const int global_header_flags, const std::map<std::string, std::string> &options)
+                     const int global_header_flags, const std::map<std::string, std::string> &options)
 #endif
     : Encoder(codec_id) {
     if (codec_->type != AVMEDIA_TYPE_AUDIO)

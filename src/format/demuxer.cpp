@@ -7,7 +7,8 @@
 
 static std::string errMsg(const std::string &msg) { return ("Demuxer: " + msg); }
 
-void av::swap(Demuxer &lhs, Demuxer &rhs) {
+namespace av {
+void swap(Demuxer &lhs, Demuxer &rhs) {
     std::swap(lhs.fmt_ctx_, rhs.fmt_ctx_);
     std::swap(lhs.fmt_, rhs.fmt_);
     std::swap(lhs.device_name_, rhs.device_name_);
@@ -16,6 +17,7 @@ void av::swap(Demuxer &lhs, Demuxer &rhs) {
     std::swap(lhs.streams_[MediaType::Video], rhs.streams_[MediaType::Video]);
     std::swap(lhs.packet_, rhs.packet_);
 }
+}  // namespace av
 
 av::Demuxer::Demuxer(const std::string &fmt_name, std::string device_name, std::map<std::string, std::string> options)
     : fmt_(av_find_input_format(fmt_name.c_str())), device_name_(std::move(device_name)), options_(std::move(options)) {

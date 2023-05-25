@@ -14,12 +14,14 @@ static std::string getChLayoutDescription(const AVChannelLayout *channel_layout)
 }
 #endif
 
-void av::swap(Converter &lhs, Converter &rhs) {
+namespace av {
+void swap(Converter &lhs, Converter &rhs) {
     std::swap(lhs.filter_graph_, rhs.filter_graph_);
     std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
     std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
     std::swap(lhs.frame_, rhs.frame_);
 }
+}  // namespace av
 
 static std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecContext *dec_ctx,
                                                               const AVCodecContext *enc_ctx,
@@ -85,7 +87,7 @@ static std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecConte
 }
 
 av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx, const AVRational in_time_base,
-                     const int offset_x, const int offset_y) {
+                         const int offset_x, const int offset_y) {
     if (!dec_ctx) throw std::invalid_argument(errMsg("dec_ctx is NULL"));
     if (!enc_ctx) throw std::invalid_argument(errMsg("enc_ctx is NULL"));
 

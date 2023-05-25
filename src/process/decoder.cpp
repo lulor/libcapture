@@ -4,11 +4,13 @@
 
 static std::string errMsg(const std::string &msg) { return ("Decoder: " + msg); }
 
-void av::swap(Decoder &lhs, Decoder &rhs) {
+namespace av {
+void swap(Decoder &lhs, Decoder &rhs) {
     std::swap(lhs.codec_, rhs.codec_);
     std::swap(lhs.codec_ctx_, rhs.codec_ctx_);
     std::swap(lhs.frame_, rhs.frame_);
 }
+}  // namespace av
 
 av::Decoder::Decoder(const AVCodecParameters *params) {
     if (!params) throw std::invalid_argument(errMsg("received stream parameters ptr is null"));
