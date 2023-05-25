@@ -14,7 +14,7 @@ static std::string getChLayoutDescription(const AVChannelLayout *channel_layout)
 }
 #endif
 
-void swap(Converter &lhs, Converter &rhs) {
+void av::swap(av::Converter &lhs, av::Converter &rhs) {
     std::swap(lhs.filter_graph_, rhs.filter_graph_);
     std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
     std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
@@ -84,7 +84,7 @@ static std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecConte
     return std::make_pair(src_args_ss.str(), filter_spec_ss.str());
 }
 
-Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx, const AVRational in_time_base,
+av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx, const AVRational in_time_base,
                      const int offset_x, const int offset_y) {
     if (!dec_ctx) throw std::invalid_argument(errMsg("dec_ctx is NULL"));
     if (!enc_ctx) throw std::invalid_argument(errMsg("enc_ctx is NULL"));
@@ -157,21 +157,21 @@ Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ct
         throw std::runtime_error(errMsg("failed to configure the filter graph"));
 }
 
-Converter::Converter(Converter &&other) noexcept { swap(*this, other); }
+av::Converter::Converter(Converter &&other) noexcept { swap(*this, other); }
 
-Converter &Converter::operator=(Converter other) {
+av::Converter &av::Converter::operator=(Converter other) {
     swap(*this, other);
     return *this;
 }
 
-void Converter::sendFrame(const av::FrameUPtr frame) {
+void av::Converter::sendFrame(const av::FrameUPtr frame) {
     if (!buffersrc_ctx_) throw std::logic_error(errMsg("buffersrc is not allocated"));
     if (!frame) throw std::invalid_argument(errMsg("sent frame is not allocated"));
     if (av_buffersrc_add_frame(buffersrc_ctx_, frame.get()))
         throw std::runtime_error(errMsg("failed to write frame to filter"));
 }
 
-av::FrameUPtr Converter::getFrame() {
+av::FrameUPtr av::Converter::getFrame() {
     if (!buffersink_ctx_) throw std::logic_error(errMsg("buffersink is not allocated"));
 
     if (!frame_) {

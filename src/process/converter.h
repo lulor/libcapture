@@ -2,6 +2,8 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Converter {
     av::FilterGraphUPtr filter_graph_;
     AVFilterContext *buffersrc_ctx_{};
@@ -50,3 +52,5 @@ public:
      */
     av::FrameUPtr getFrame();
 };
+
+}  // namespace av

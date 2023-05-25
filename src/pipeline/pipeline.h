@@ -19,7 +19,7 @@ class Pipeline {
     std::array<bool, av::MediaType::NUM_TYPES> managed_types_{};
     std::array<av::Decoder, av::MediaType::NUM_TYPES> decoders_;
     std::array<av::Encoder, av::MediaType::NUM_TYPES> encoders_;
-    std::array<Converter, av::MediaType::NUM_TYPES> converters_;
+    std::array<av::Converter, av::MediaType::NUM_TYPES> converters_;
     av::Muxer muxer_;
     std::mutex muxer_m_;
 

@@ -89,8 +89,8 @@ void Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, c
                                   muxer_.getGlobalHeaderFlags(), enc_options);
 
     /* Init converter */
-    converters_[type] = Converter(decoders_[type].getContext(), encoders_[type].getContext(),
-                                  demuxer.getStreamTimeBase(type), offset_x, offset_y);
+    converters_[type] = av::Converter(decoders_[type].getContext(), encoders_[type].getContext(),
+                                      demuxer.getStreamTimeBase(type), offset_x, offset_y);
 
     muxer_.addStream(encoders_[type].getContext());
 
@@ -124,7 +124,7 @@ void Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
 
     /* Init converter */
     converters_[type] =
-        Converter(decoders_[type].getContext(), encoders_[type].getContext(), demuxer.getStreamTimeBase(type));
+        av::Converter(decoders_[type].getContext(), encoders_[type].getContext(), demuxer.getStreamTimeBase(type));
 
     muxer_.addStream(encoders_[type].getContext());
 
@@ -142,7 +142,7 @@ void Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
     assert(managed_types_[type]);
 
     av::Decoder &decoder = decoders_[type];
-    Converter &converter = converters_[type];
+    av::Converter &converter = converters_[type];
 
     bool decoder_received = false;
     while (!decoder_received) {
