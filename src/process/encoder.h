@@ -5,6 +5,8 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Encoder {
 #ifdef FFMPEG_5
     const AVCodec *codec_{};
@@ -99,3 +101,5 @@ public:
      */
     [[nodiscard]] std::string getName() const;
 };
+
+}

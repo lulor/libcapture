@@ -85,8 +85,8 @@ void Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, c
      * ultrafast -> superfast -> veryfast -> faster -> fast -> medium
      */
     enc_options.insert({"preset", "ultrafast"});
-    encoders_[type] = Encoder(codec_id, width, height, pix_fmt, demuxer.getStreamTimeBase(type),
-                              muxer_.getGlobalHeaderFlags(), enc_options);
+    encoders_[type] = av::Encoder(codec_id, width, height, pix_fmt, demuxer.getStreamTimeBase(type),
+                                  muxer_.getGlobalHeaderFlags(), enc_options);
 
     /* Init converter */
     converters_[type] = Converter(decoders_[type].getContext(), encoders_[type].getContext(),
@@ -114,13 +114,13 @@ void Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
 #ifdef FFMPEG_5
     const AVChannelLayout *channel_layout = &dec_ctx->ch_layout;
 #else
-    const uint64_t channel_layout = dec_ctx->channel_layout ?
-        dec_ctx->channel_layout : av_get_default_channel_layout(dec_ctx->channels);
+    const uint64_t channel_layout =
+        dec_ctx->channel_layout ? dec_ctx->channel_layout : av_get_default_channel_layout(dec_ctx->channels);
 #endif
 
     /* Init encoder */
-    encoders_[type] = Encoder(codec_id, dec_ctx->sample_rate, channel_layout, muxer_.getGlobalHeaderFlags(),
-                              std::map<std::string, std::string>());
+    encoders_[type] = av::Encoder(codec_id, dec_ctx->sample_rate, channel_layout, muxer_.getGlobalHeaderFlags(),
+                                  std::map<std::string, std::string>());
 
     /* Init converter */
     converters_[type] =
@@ -166,7 +166,7 @@ void Pipeline::processConvertedFrame(const AVFrame *frame, const av::MediaType t
     assert(av::isMediaTypeValid(type));
     assert(managed_types_[type]);
 
-    Encoder &encoder = encoders_[type];
+    av::Encoder &encoder = encoders_[type];
 
     bool encoder_received = false;
     while (!encoder_received) {

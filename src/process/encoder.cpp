@@ -8,13 +8,13 @@
 
 static std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
 
-void swap(Encoder &lhs, Encoder &rhs) {
+void av::swap(av::Encoder &lhs, av::Encoder &rhs) {
     std::swap(lhs.codec_, rhs.codec_);
     std::swap(lhs.codec_ctx_, rhs.codec_ctx_);
     std::swap(lhs.packet_, rhs.packet_);
 }
 
-Encoder::Encoder(const AVCodecID codec_id) {
+av::Encoder::Encoder(const AVCodecID codec_id) {
 #ifdef MACOS
     // if (codec_id == AV_CODEC_ID_H264) {
     //     codec_ = avcodec_find_encoder_by_name("h264_videotoolbox");
@@ -33,8 +33,8 @@ Encoder::Encoder(const AVCodecID codec_id) {
 }
 
 #ifdef FFMPEG_5
-Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const AVChannelLayout *channel_layout,
-                 const int global_header_flags, const std::map<std::string, std::string> &options)
+av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const AVChannelLayout *channel_layout,
+                     const int global_header_flags, const std::map<std::string, std::string> &options)
 #else
 Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t channel_layout,
                  const int global_header_flags, const std::map<std::string, std::string> &options)
@@ -66,9 +66,9 @@ Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t
     init(global_header_flags, options);
 }
 
-Encoder::Encoder(const AVCodecID codec_id, const int width, const int height, const AVPixelFormat pix_fmt,
-                 const AVRational time_base, const int global_header_flags,
-                 const std::map<std::string, std::string> &options)
+av::Encoder::Encoder(const AVCodecID codec_id, const int width, const int height, const AVPixelFormat pix_fmt,
+                     const AVRational time_base, const int global_header_flags,
+                     const std::map<std::string, std::string> &options)
     : Encoder(codec_id) {
     if (codec_->type != AVMEDIA_TYPE_VIDEO)
         throw std::invalid_argument(errMsg("failed to create video encoder (received codec ID is not of type video)"));
@@ -81,14 +81,14 @@ Encoder::Encoder(const AVCodecID codec_id, const int width, const int height, co
     init(global_header_flags, options);
 }
 
-Encoder::Encoder(Encoder &&other) noexcept { swap(*this, other); }
+av::Encoder::Encoder(Encoder &&other) noexcept { swap(*this, other); }
 
-Encoder &Encoder::operator=(Encoder other) {
+av::Encoder &av::Encoder::operator=(Encoder other) {
     swap(*this, other);
     return *this;
 }
 
-void Encoder::init(const int global_header_flags, const std::map<std::string, std::string> &options) {
+void av::Encoder::init(const int global_header_flags, const std::map<std::string, std::string> &options) {
     assert(codec_);
     assert(codec_ctx_);
 
@@ -107,7 +107,7 @@ void Encoder::init(const int global_header_flags, const std::map<std::string, st
 #endif
 }
 
-bool Encoder::sendFrame(const AVFrame *frame) {
+bool av::Encoder::sendFrame(const AVFrame *frame) {
     if (!codec_ctx_) throw std::logic_error(errMsg("encoder was not initialized yet"));
     const int ret = avcodec_send_frame(codec_ctx_.get(), frame);
     if (ret == AVERROR(EAGAIN)) return false;
@@ -116,7 +116,7 @@ bool Encoder::sendFrame(const AVFrame *frame) {
     return true;
 }
 
-av::PacketUPtr Encoder::getPacket() {
+av::PacketUPtr av::Encoder::getPacket() {
     if (!codec_ctx_) throw std::logic_error(errMsg("encoder was not initialized yet"));
 
     if (!packet_) {
@@ -131,9 +131,9 @@ av::PacketUPtr Encoder::getPacket() {
     return std::move(packet_);
 }
 
-const AVCodecContext *Encoder::getContext() const { return codec_ctx_.get(); }
+const AVCodecContext *av::Encoder::getContext() const { return codec_ctx_.get(); }
 
-std::string Encoder::getName() const {
+std::string av::Encoder::getName() const {
     if (codec_) return codec_->long_name;
     return std::string{};
 }
