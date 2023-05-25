@@ -6,15 +6,19 @@
 
 #define VERBOSE 0  // TO-DO: improve
 
-static std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
+namespace {
+std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
+}  // namespace
 
+namespace av {
 void swap(Encoder &lhs, Encoder &rhs) {
     std::swap(lhs.codec_, rhs.codec_);
     std::swap(lhs.codec_ctx_, rhs.codec_ctx_);
     std::swap(lhs.packet_, rhs.packet_);
 }
+}  // namespace av
 
-Encoder::Encoder(const AVCodecID codec_id) {
+av::Encoder::Encoder(const AVCodecID codec_id) {
 #ifdef MACOS
     // if (codec_id == AV_CODEC_ID_H264) {
     //     codec_ = avcodec_find_encoder_by_name("h264_videotoolbox");
@@ -28,16 +32,16 @@ Encoder::Encoder(const AVCodecID codec_id) {
         if (!codec_) throw std::runtime_error(errMsg("cannot find encoder"));
     }
 
-    codec_ctx_ = av::CodecContextUPtr(avcodec_alloc_context3(codec_));
+    codec_ctx_ = CodecContextUPtr(avcodec_alloc_context3(codec_));
     if (!codec_ctx_) throw std::runtime_error(errMsg("failed to allocated memory for AVCodecContext"));
 }
 
 #ifdef FFMPEG_5
-Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const AVChannelLayout *channel_layout,
-                 const int global_header_flags, const std::map<std::string, std::string> &options)
+av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const AVChannelLayout *channel_layout,
+                     const int global_header_flags, const std::map<std::string, std::string> &options)
 #else
-Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t channel_layout,
-                 const int global_header_flags, const std::map<std::string, std::string> &options)
+av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t channel_layout,
+                     const int global_header_flags, const std::map<std::string, std::string> &options)
 #endif
     : Encoder(codec_id) {
     if (codec_->type != AVMEDIA_TYPE_AUDIO)
@@ -66,9 +70,9 @@ Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t
     init(global_header_flags, options);
 }
 
-Encoder::Encoder(const AVCodecID codec_id, const int width, const int height, const AVPixelFormat pix_fmt,
-                 const AVRational time_base, const int global_header_flags,
-                 const std::map<std::string, std::string> &options)
+av::Encoder::Encoder(const AVCodecID codec_id, const int width, const int height, const AVPixelFormat pix_fmt,
+                     const AVRational time_base, const int global_header_flags,
+                     const std::map<std::string, std::string> &options)
     : Encoder(codec_id) {
     if (codec_->type != AVMEDIA_TYPE_VIDEO)
         throw std::invalid_argument(errMsg("failed to create video encoder (received codec ID is not of type video)"));
@@ -81,33 +85,33 @@ Encoder::Encoder(const AVCodecID codec_id, const int width, const int height, co
     init(global_header_flags, options);
 }
 
-Encoder::Encoder(Encoder &&other) noexcept { swap(*this, other); }
+av::Encoder::Encoder(Encoder &&other) noexcept { swap(*this, other); }
 
-Encoder &Encoder::operator=(Encoder other) {
+av::Encoder &av::Encoder::operator=(Encoder other) {
     swap(*this, other);
     return *this;
 }
 
-void Encoder::init(const int global_header_flags, const std::map<std::string, std::string> &options) {
+void av::Encoder::init(const int global_header_flags, const std::map<std::string, std::string> &options) {
     assert(codec_);
     assert(codec_ctx_);
 
     if (global_header_flags & AVFMT_GLOBALHEADER) codec_ctx_->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    av::DictionaryUPtr dict = av::map2dict(options);
+    DictionaryUPtr dict = map2dict(options);
     AVDictionary *dict_raw = dict.release();
     const int ret = avcodec_open2(codec_ctx_.get(), codec_, dict_raw ? &dict_raw : nullptr);
-    dict = av::DictionaryUPtr(dict_raw);
+    dict = DictionaryUPtr(dict_raw);
     if (ret) throw std::logic_error(errMsg("failed to initialize Codec Context"));
 #if VERBOSE
-    auto map = av::dict2map(dict.get());
+    auto map = dict2map(dict.get());
     for (const auto &[key, val] : map) {
         std::cerr << "Encoder: couldn't find any '" << key << "' option" << std::endl;
     }
 #endif
 }
 
-bool Encoder::sendFrame(const AVFrame *frame) {
+bool av::Encoder::sendFrame(const AVFrame *frame) {
     if (!codec_ctx_) throw std::logic_error(errMsg("encoder was not initialized yet"));
     const int ret = avcodec_send_frame(codec_ctx_.get(), frame);
     if (ret == AVERROR(EAGAIN)) return false;
@@ -116,11 +120,11 @@ bool Encoder::sendFrame(const AVFrame *frame) {
     return true;
 }
 
-av::PacketUPtr Encoder::getPacket() {
+av::PacketUPtr av::Encoder::getPacket() {
     if (!codec_ctx_) throw std::logic_error(errMsg("encoder was not initialized yet"));
 
     if (!packet_) {
-        packet_ = av::PacketUPtr(av_packet_alloc());
+        packet_ = PacketUPtr(av_packet_alloc());
         if (!packet_) throw std::runtime_error(errMsg("failed to allocate packet"));
     }
 
@@ -131,9 +135,9 @@ av::PacketUPtr Encoder::getPacket() {
     return std::move(packet_);
 }
 
-const AVCodecContext *Encoder::getContext() const { return codec_ctx_.get(); }
+const AVCodecContext *av::Encoder::getContext() const { return codec_ctx_.get(); }
 
-std::string Encoder::getName() const {
+std::string av::Encoder::getName() const {
     if (codec_) return codec_->long_name;
     return std::string{};
 }

@@ -2,11 +2,13 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Converter {
-    av::FilterGraphUPtr filter_graph_;
+    FilterGraphUPtr filter_graph_;
     AVFilterContext *buffersrc_ctx_{};
     AVFilterContext *buffersink_ctx_{};
-    av::FrameUPtr frame_;
+    FrameUPtr frame_;
 
     friend void swap(Converter &lhs, Converter &rhs);
 
@@ -42,11 +44,13 @@ public:
     /**
      * Send a frame to convert
      */
-    void sendFrame(av::FrameUPtr frame);
+    void sendFrame(FrameUPtr frame);
 
     /**
      * Get a converted frame
      * @return a new converted frame if it was possible to build it, nullptr otherwise
      */
-    av::FrameUPtr getFrame();
+    FrameUPtr getFrame();
 };
+
+}  // namespace av

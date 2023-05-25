@@ -5,14 +5,16 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Encoder {
 #ifdef FFMPEG_5
     const AVCodec *codec_{};
 #else  // FFmpeg 4
     AVCodec *codec_{};
 #endif
-    av::CodecContextUPtr codec_ctx_;
-    av::PacketUPtr packet_;
+    CodecContextUPtr codec_ctx_;
+    PacketUPtr packet_;
 
     friend void swap(Encoder &lhs, Encoder &rhs);
 
@@ -86,7 +88,7 @@ public:
      * @return a packet if it was possible to get it, nullptr if the encoder had nothing to write
      * because it is empty or flushed
      */
-    av::PacketUPtr getPacket();
+    PacketUPtr getPacket();
 
     /**
      * Access the internal codec context
@@ -99,3 +101,5 @@ public:
      */
     [[nodiscard]] std::string getName() const;
 };
+
+}

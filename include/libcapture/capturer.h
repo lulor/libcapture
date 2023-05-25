@@ -10,8 +10,10 @@
 
 #include "video_parameters.h"
 
+namespace av {
 class Demuxer;
 class Pipeline;
+}  // namespace av
 
 class Capturer {
     /* Whether the recorder should be verbose or not */
@@ -26,20 +28,20 @@ class Capturer {
     std::thread capturer_;
 
     /* The pipeline used for audio/video processing */
-    std::unique_ptr<Pipeline> pipeline_;
+    std::unique_ptr<av::Pipeline> pipeline_;
 
     /**
      * Read packets from a demuxer and pass them to the processing pipeline
      * @param demuxer the demuxer to read the packets from
      */
-    void capture(Demuxer &demuxer);
+    void capture(av::Demuxer &demuxer);
 
     /**
      * Read packets from two separate audio/video demuxers and pass them to the processing pipeline
      * @param video_demuxer the video demuxer to read packets from
      * @param audio_demuxer the audio demuxer to read packets from
      */
-    void capture(Demuxer &video_demuxer, Demuxer &audio_demuxer);
+    void capture(av::Demuxer &video_demuxer, av::Demuxer &audio_demuxer);
 
     /**
      * Stop the capturing

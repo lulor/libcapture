@@ -2,10 +2,12 @@
 
 #include <sstream>
 
-static std::string errMsg(const std::string &msg) { return ("Converter: " + msg); }
+namespace {
+
+std::string errMsg(const std::string &msg) { return ("Converter: " + msg); }
 
 #ifdef FFMPEG_5
-static std::string getChLayoutDescription(const AVChannelLayout *channel_layout) {
+std::string getChLayoutDescription(const AVChannelLayout *channel_layout) {
     char buf[64];
     const int ret = av_channel_layout_describe(channel_layout, buf, sizeof(buf));
     if (ret < 0) throw std::runtime_error(errMsg("Error obtaining ch_layout description"));
@@ -14,16 +16,8 @@ static std::string getChLayoutDescription(const AVChannelLayout *channel_layout)
 }
 #endif
 
-void swap(Converter &lhs, Converter &rhs) {
-    std::swap(lhs.filter_graph_, rhs.filter_graph_);
-    std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
-    std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
-    std::swap(lhs.frame_, rhs.frame_);
-}
-
-static std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecContext *dec_ctx,
-                                                              const AVCodecContext *enc_ctx,
-                                                              const AVRational in_time_base) {
+std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx,
+                                                       const AVRational in_time_base) {
     std::stringstream src_args_ss;
     src_args_ss << "time_base=" << in_time_base.num << "/" << in_time_base.den;
     src_args_ss << ":sample_rate=" << dec_ctx->sample_rate;
@@ -63,10 +57,9 @@ static std::pair<std::string, std::string> getAudioFilterSpec(const AVCodecConte
     return std::make_pair(src_args_ss.str(), filter_spec_ss.str());
 }
 
-static std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecContext *dec_ctx,
-                                                              const AVCodecContext *enc_ctx,
-                                                              const AVRational in_time_base, const int offset_x,
-                                                              const int offset_y) {
+std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx,
+                                                       const AVRational in_time_base, const int offset_x,
+                                                       const int offset_y) {
     std::stringstream src_args_ss;
     src_args_ss << "video_size=" << dec_ctx->width << "x" << dec_ctx->height;
     src_args_ss << ":pix_fmt=" << dec_ctx->pix_fmt;
@@ -84,8 +77,19 @@ static std::pair<std::string, std::string> getVideoFilterSpec(const AVCodecConte
     return std::make_pair(src_args_ss.str(), filter_spec_ss.str());
 }
 
-Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx, const AVRational in_time_base,
-                     const int offset_x, const int offset_y) {
+}  // namespace
+
+namespace av {
+void swap(Converter &lhs, Converter &rhs) {
+    std::swap(lhs.filter_graph_, rhs.filter_graph_);
+    std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
+    std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
+    std::swap(lhs.frame_, rhs.frame_);
+}
+}  // namespace av
+
+av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ctx, const AVRational in_time_base,
+                         const int offset_x, const int offset_y) {
     if (!dec_ctx) throw std::invalid_argument(errMsg("dec_ctx is NULL"));
     if (!enc_ctx) throw std::invalid_argument(errMsg("enc_ctx is NULL"));
 
@@ -110,7 +114,7 @@ Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ct
         throw std::invalid_argument(errMsg("unknown media type received in constructor"));
     }
 
-    filter_graph_ = av::FilterGraphUPtr(avfilter_graph_alloc());
+    filter_graph_ = FilterGraphUPtr(avfilter_graph_alloc());
     if (!filter_graph_) throw std::runtime_error(errMsg("failed to allocate filter graph"));
 
     { /* buffer src set-up*/
@@ -130,14 +134,14 @@ Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ct
 
     {
         /* Endpoints for the filter graph. */
-        av::FilterInOutUPtr outputs(avfilter_inout_alloc());
+        FilterInOutUPtr outputs(avfilter_inout_alloc());
         if (!outputs) throw std::runtime_error(errMsg("failed to allocate filter outputs"));
         outputs->name = av_strdup("in");
         outputs->filter_ctx = buffersrc_ctx_;
         outputs->pad_idx = 0;
         outputs->next = nullptr;
 
-        av::FilterInOutUPtr inputs(avfilter_inout_alloc());
+        FilterInOutUPtr inputs(avfilter_inout_alloc());
         if (!inputs) throw std::runtime_error(errMsg("failed to allocate filter inputs"));
         inputs->name = av_strdup("out");
         inputs->filter_ctx = buffersink_ctx_;
@@ -157,25 +161,25 @@ Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *enc_ct
         throw std::runtime_error(errMsg("failed to configure the filter graph"));
 }
 
-Converter::Converter(Converter &&other) noexcept { swap(*this, other); }
+av::Converter::Converter(Converter &&other) noexcept { swap(*this, other); }
 
-Converter &Converter::operator=(Converter other) {
+av::Converter &av::Converter::operator=(Converter other) {
     swap(*this, other);
     return *this;
 }
 
-void Converter::sendFrame(const av::FrameUPtr frame) {
+void av::Converter::sendFrame(const FrameUPtr frame) {
     if (!buffersrc_ctx_) throw std::logic_error(errMsg("buffersrc is not allocated"));
     if (!frame) throw std::invalid_argument(errMsg("sent frame is not allocated"));
     if (av_buffersrc_add_frame(buffersrc_ctx_, frame.get()))
         throw std::runtime_error(errMsg("failed to write frame to filter"));
 }
 
-av::FrameUPtr Converter::getFrame() {
+av::FrameUPtr av::Converter::getFrame() {
     if (!buffersink_ctx_) throw std::logic_error(errMsg("buffersink is not allocated"));
 
     if (!frame_) {
-        frame_ = av::FrameUPtr(av_frame_alloc());
+        frame_ = FrameUPtr(av_frame_alloc());
         if (!frame_) throw std::runtime_error(errMsg("failed to allocate frame"));
     }
 

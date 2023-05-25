@@ -2,16 +2,18 @@
 
 #include <stdexcept>
 
-static std::string errMsg(const std::string &msg) { return ("Muxer: " + msg); }
+namespace {
+std::string errMsg(const std::string &msg) { return ("Muxer: " + msg); }
+}  // namespace
 
-Muxer::Muxer(std::string filename) : filename_(std::move(filename)) {
+av::Muxer::Muxer(std::string filename) : filename_(std::move(filename)) {
     AVFormatContext *fmt_ctx = nullptr;
     if (avformat_alloc_output_context2(&fmt_ctx, nullptr, nullptr, filename_.c_str()) < 0)
         throw std::runtime_error(errMsg("failed to allocate output context for file '" + filename_ + "'"));
-    fmt_ctx_ = av::FormatContextUPtr(fmt_ctx);
+    fmt_ctx_ = FormatContextUPtr(fmt_ctx);
 }
 
-Muxer::~Muxer() {
+av::Muxer::~Muxer() {
     if (fmt_ctx_->pb) {  // if file is still open
         /* try to leave the output file in a valid state in any case */
         if (file_inited_ && !file_finalized_) av_write_trailer(fmt_ctx_.get());
@@ -19,14 +21,14 @@ Muxer::~Muxer() {
     }
 }
 
-void Muxer::addStream(const AVCodecContext *enc_ctx) {
+void av::Muxer::addStream(const AVCodecContext *enc_ctx) {
     if (!enc_ctx) throw std::invalid_argument(errMsg("received encoder context is NULL"));
 
-    av::MediaType type;
+    MediaType type;
     if (enc_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
-        type = av::MediaType::Video;
+        type = MediaType::Video;
     } else if (enc_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
-        type = av::MediaType::Audio;
+        type = MediaType::Audio;
     } else {
         throw std::invalid_argument(errMsg("received encoder context is of unknown media type"));
     }
@@ -44,7 +46,7 @@ void Muxer::addStream(const AVCodecContext *enc_ctx) {
     encoders_time_bases_[type] = enc_ctx->time_base;
 }
 
-void Muxer::initFile() {
+void av::Muxer::initFile() {
     if (file_inited_) throw std::logic_error(errMsg("cannot init file, file has already been initialized"));
     if (fmt_ctx_->pb) throw std::logic_error(errMsg("cannot create file, file has already been created"));
     /* create empty video file */
@@ -58,7 +60,7 @@ void Muxer::initFile() {
     file_inited_ = true;
 }
 
-void Muxer::finalizeFile() {
+void av::Muxer::finalizeFile() {
     if (!file_inited_) throw std::logic_error(errMsg("cannot finalize file, file has not been initialized"));
     if (file_finalized_) throw std::logic_error(errMsg("cannot finalize file, file has already been finalized"));
     if (av_write_trailer(fmt_ctx_.get()) < 0) throw std::runtime_error(errMsg("failed to write file trailer"));
@@ -66,14 +68,14 @@ void Muxer::finalizeFile() {
     if (avio_closep(&fmt_ctx_->pb) < 0) throw std::runtime_error(errMsg("failed to close file"));
 }
 
-bool Muxer::isInited() const { return file_inited_; }
+bool av::Muxer::isInited() const { return file_inited_; }
 
-void Muxer::writePacket(const av::PacketUPtr packet, const av::MediaType packet_type) {
+void av::Muxer::writePacket(const PacketUPtr packet, const MediaType packet_type) {
     if (!file_inited_) throw std::logic_error(errMsg("cannot write packet, file has not been initialized"));
     if (file_finalized_) throw std::logic_error(errMsg("cannot write packet, file has already been finalized"));
 
     if (packet) {
-        if (!av::validMediaType(packet_type)) throw std::invalid_argument(errMsg("received packet of unknown type"));
+        if (!isMediaTypeValid(packet_type)) throw std::invalid_argument(errMsg("received packet of unknown type"));
         auto stream = streams_[packet_type];
         if (!stream) throw std::logic_error(errMsg("stream of specified type not present"));
         av_packet_rescale_ts(packet.get(), encoders_time_bases_[packet_type], stream->time_base);
@@ -84,6 +86,6 @@ void Muxer::writePacket(const av::PacketUPtr packet, const av::MediaType packet_
         throw std::runtime_error(errMsg("failed to write packet"));
 }
 
-void Muxer::printInfo() const { av_dump_format(fmt_ctx_.get(), 0, filename_.c_str(), 1); }
+void av::Muxer::printInfo() const { av_dump_format(fmt_ctx_.get(), 0, filename_.c_str(), 1); }
 
-int Muxer::getGlobalHeaderFlags() const { return fmt_ctx_->oformat->flags; }
+int av::Muxer::getGlobalHeaderFlags() const { return fmt_ctx_->oformat->flags; }

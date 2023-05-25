@@ -6,17 +6,19 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Demuxer {
 #ifdef FFMPEG_5
     const AVInputFormat *fmt_{};
 #else  // FFmpeg 4
     AVInputFormat *fmt_{};
 #endif
-    av::InFormatContextUPtr fmt_ctx_;
+    InFormatContextUPtr fmt_ctx_;
     std::string device_name_;
     std::map<std::string, std::string> options_;
-    std::array<const AVStream *, av::MediaType::NumTypes> streams_{};
-    av::PacketUPtr packet_;
+    std::array<const AVStream *, MediaType::NUM_TYPES> streams_{};
+    PacketUPtr packet_;
 
     friend void swap(Demuxer &lhs, Demuxer &rhs);
 
@@ -70,21 +72,21 @@ public:
      * @param stream_type the type of data of the stream
      * @return an observer pointer to access the stream parameters
      */
-    [[nodiscard]] const AVCodecParameters *getStreamParams(av::MediaType stream_type) const;
+    [[nodiscard]] const AVCodecParameters *getStreamParams(MediaType stream_type) const;
 
     /**
      * Get the time-base of the stream
      * @param stream_type the type of data of the stream
      * @return the stream time-base
      */
-    [[nodiscard]] AVRational getStreamTimeBase(av::MediaType stream_type) const;
+    [[nodiscard]] AVRational getStreamTimeBase(MediaType stream_type) const;
 
     /**
      * Read a packet from the input device and return it together with its type
      * @return a packet and its type if it was possible to read it, nullptr and a random meaningless type
      * if there was nothing to read
      */
-    std::pair<av::PacketUPtr, av::MediaType> readPacket();
+    std::pair<PacketUPtr, MediaType> readPacket();
 
     /**
      * Print informations about the streams
@@ -92,3 +94,5 @@ public:
      */
     void printInfo(int index = 0) const;
 };
+
+}  // namespace av
