@@ -183,7 +183,7 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
         /* init audio demuxer and pipeline */
         std::string audio_device_name = generateInputDeviceName("", audio_device, video_params);
         audio_demuxer =
-            Demuxer(getInputFormatName(true), std::move(audio_device_name), std::map<std::string, std::string>());
+            av::Demuxer(getInputFormatName(true), std::move(audio_device_name), std::map<std::string, std::string>());
         audio_demuxer->openInput();
         pipeline_->initAudio(*audio_demuxer, audio_codec_id);
 #else
