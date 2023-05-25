@@ -36,7 +36,7 @@ av::Encoder::Encoder(const AVCodecID codec_id) {
 av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const AVChannelLayout *channel_layout,
                      const int global_header_flags, const std::map<std::string, std::string> &options)
 #else
-Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t channel_layout,
+av::Encoder::Encoder(const AVCodecID codec_id, const int sample_rate, const uint64_t channel_layout,
                  const int global_header_flags, const std::map<std::string, std::string> &options)
 #endif
     : Encoder(codec_id) {
