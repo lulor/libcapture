@@ -8,7 +8,7 @@ av::Muxer::Muxer(std::string filename) : filename_(std::move(filename)) {
     AVFormatContext *fmt_ctx = nullptr;
     if (avformat_alloc_output_context2(&fmt_ctx, nullptr, nullptr, filename_.c_str()) < 0)
         throw std::runtime_error(errMsg("failed to allocate output context for file '" + filename_ + "'"));
-    fmt_ctx_ = av::FormatContextUPtr(fmt_ctx);
+    fmt_ctx_ = FormatContextUPtr(fmt_ctx);
 }
 
 av::Muxer::~Muxer() {
@@ -22,11 +22,11 @@ av::Muxer::~Muxer() {
 void av::Muxer::addStream(const AVCodecContext *enc_ctx) {
     if (!enc_ctx) throw std::invalid_argument(errMsg("received encoder context is NULL"));
 
-    av::MediaType type;
+    MediaType type;
     if (enc_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
-        type = av::MediaType::Video;
+        type = MediaType::Video;
     } else if (enc_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
-        type = av::MediaType::Audio;
+        type = MediaType::Audio;
     } else {
         throw std::invalid_argument(errMsg("received encoder context is of unknown media type"));
     }
@@ -68,12 +68,12 @@ void av::Muxer::finalizeFile() {
 
 bool av::Muxer::isInited() const { return file_inited_; }
 
-void av::Muxer::writePacket(const av::PacketUPtr packet, const av::MediaType packet_type) {
+void av::Muxer::writePacket(const PacketUPtr packet, const MediaType packet_type) {
     if (!file_inited_) throw std::logic_error(errMsg("cannot write packet, file has not been initialized"));
     if (file_finalized_) throw std::logic_error(errMsg("cannot write packet, file has already been finalized"));
 
     if (packet) {
-        if (!av::isMediaTypeValid(packet_type)) throw std::invalid_argument(errMsg("received packet of unknown type"));
+        if (!isMediaTypeValid(packet_type)) throw std::invalid_argument(errMsg("received packet of unknown type"));
         auto stream = streams_[packet_type];
         if (!stream) throw std::logic_error(errMsg("stream of specified type not present"));
         av_packet_rescale_ts(packet.get(), encoders_time_bases_[packet_type], stream->time_base);

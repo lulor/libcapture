@@ -4,7 +4,7 @@
 
 static std::string errMsg(const std::string &msg) { return ("Decoder: " + msg); }
 
-void av::swap(av::Decoder &lhs, av::Decoder &rhs) {
+void av::swap(Decoder &lhs, Decoder &rhs) {
     std::swap(lhs.codec_, rhs.codec_);
     std::swap(lhs.codec_ctx_, rhs.codec_ctx_);
     std::swap(lhs.frame_, rhs.frame_);
@@ -16,7 +16,7 @@ av::Decoder::Decoder(const AVCodecParameters *params) {
     codec_ = avcodec_find_decoder(params->codec_id);
     if (!codec_) throw std::runtime_error(errMsg("cannot find decoder"));
 
-    codec_ctx_ = av::CodecContextUPtr(avcodec_alloc_context3(codec_));
+    codec_ctx_ = CodecContextUPtr(avcodec_alloc_context3(codec_));
     if (!codec_ctx_) throw std::runtime_error(errMsg("failed to allocated memory for AVCodecContext"));
 
     if (avcodec_parameters_to_context(codec_ctx_.get(), params) < 0)
@@ -26,9 +26,9 @@ av::Decoder::Decoder(const AVCodecParameters *params) {
         throw std::runtime_error(errMsg("unable to open the av codec"));
 }
 
-av::Decoder::Decoder(av::Decoder &&other) noexcept { swap(*this, other); }
+av::Decoder::Decoder(Decoder &&other) noexcept { swap(*this, other); }
 
-av::Decoder &av::Decoder::operator=(av::Decoder other) {
+av::Decoder &av::Decoder::operator=(Decoder other) {
     swap(*this, other);
     return *this;
 }
@@ -46,7 +46,7 @@ av::FrameUPtr av::Decoder::getFrame() {
     if (!codec_ctx_) throw std::logic_error(errMsg("decoder was not initialized yet"));
 
     if (!frame_) {
-        frame_ = av::FrameUPtr(av_frame_alloc());
+        frame_ = FrameUPtr(av_frame_alloc());
         if (!frame_) throw std::runtime_error(errMsg("failed to allocate frame"));
     }
 

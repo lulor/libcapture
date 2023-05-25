@@ -14,7 +14,7 @@ static std::string getChLayoutDescription(const AVChannelLayout *channel_layout)
 }
 #endif
 
-void av::swap(av::Converter &lhs, av::Converter &rhs) {
+void av::swap(Converter &lhs, Converter &rhs) {
     std::swap(lhs.filter_graph_, rhs.filter_graph_);
     std::swap(lhs.buffersrc_ctx_, rhs.buffersrc_ctx_);
     std::swap(lhs.buffersink_ctx_, rhs.buffersink_ctx_);
@@ -110,7 +110,7 @@ av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *en
         throw std::invalid_argument(errMsg("unknown media type received in constructor"));
     }
 
-    filter_graph_ = av::FilterGraphUPtr(avfilter_graph_alloc());
+    filter_graph_ = FilterGraphUPtr(avfilter_graph_alloc());
     if (!filter_graph_) throw std::runtime_error(errMsg("failed to allocate filter graph"));
 
     { /* buffer src set-up*/
@@ -130,14 +130,14 @@ av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *en
 
     {
         /* Endpoints for the filter graph. */
-        av::FilterInOutUPtr outputs(avfilter_inout_alloc());
+        FilterInOutUPtr outputs(avfilter_inout_alloc());
         if (!outputs) throw std::runtime_error(errMsg("failed to allocate filter outputs"));
         outputs->name = av_strdup("in");
         outputs->filter_ctx = buffersrc_ctx_;
         outputs->pad_idx = 0;
         outputs->next = nullptr;
 
-        av::FilterInOutUPtr inputs(avfilter_inout_alloc());
+        FilterInOutUPtr inputs(avfilter_inout_alloc());
         if (!inputs) throw std::runtime_error(errMsg("failed to allocate filter inputs"));
         inputs->name = av_strdup("out");
         inputs->filter_ctx = buffersink_ctx_;
@@ -164,7 +164,7 @@ av::Converter &av::Converter::operator=(Converter other) {
     return *this;
 }
 
-void av::Converter::sendFrame(const av::FrameUPtr frame) {
+void av::Converter::sendFrame(const FrameUPtr frame) {
     if (!buffersrc_ctx_) throw std::logic_error(errMsg("buffersrc is not allocated"));
     if (!frame) throw std::invalid_argument(errMsg("sent frame is not allocated"));
     if (av_buffersrc_add_frame(buffersrc_ctx_, frame.get()))
@@ -175,7 +175,7 @@ av::FrameUPtr av::Converter::getFrame() {
     if (!buffersink_ctx_) throw std::logic_error(errMsg("buffersink is not allocated"));
 
     if (!frame_) {
-        frame_ = av::FrameUPtr(av_frame_alloc());
+        frame_ = FrameUPtr(av_frame_alloc());
         if (!frame_) throw std::runtime_error(errMsg("failed to allocate frame"));
     }
 

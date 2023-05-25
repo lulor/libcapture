@@ -8,7 +8,7 @@
 
 static std::string errMsg(const std::string &msg) { return ("Encoder: " + msg); }
 
-void av::swap(av::Encoder &lhs, av::Encoder &rhs) {
+void av::swap(Encoder &lhs, Encoder &rhs) {
     std::swap(lhs.codec_, rhs.codec_);
     std::swap(lhs.codec_ctx_, rhs.codec_ctx_);
     std::swap(lhs.packet_, rhs.packet_);
@@ -28,7 +28,7 @@ av::Encoder::Encoder(const AVCodecID codec_id) {
         if (!codec_) throw std::runtime_error(errMsg("cannot find encoder"));
     }
 
-    codec_ctx_ = av::CodecContextUPtr(avcodec_alloc_context3(codec_));
+    codec_ctx_ = CodecContextUPtr(avcodec_alloc_context3(codec_));
     if (!codec_ctx_) throw std::runtime_error(errMsg("failed to allocated memory for AVCodecContext"));
 }
 
@@ -94,13 +94,13 @@ void av::Encoder::init(const int global_header_flags, const std::map<std::string
 
     if (global_header_flags & AVFMT_GLOBALHEADER) codec_ctx_->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    av::DictionaryUPtr dict = av::map2dict(options);
+    DictionaryUPtr dict = map2dict(options);
     AVDictionary *dict_raw = dict.release();
     const int ret = avcodec_open2(codec_ctx_.get(), codec_, dict_raw ? &dict_raw : nullptr);
-    dict = av::DictionaryUPtr(dict_raw);
+    dict = DictionaryUPtr(dict_raw);
     if (ret) throw std::logic_error(errMsg("failed to initialize Codec Context"));
 #if VERBOSE
-    auto map = av::dict2map(dict.get());
+    auto map = dict2map(dict.get());
     for (const auto &[key, val] : map) {
         std::cerr << "Encoder: couldn't find any '" << key << "' option" << std::endl;
     }
@@ -120,7 +120,7 @@ av::PacketUPtr av::Encoder::getPacket() {
     if (!codec_ctx_) throw std::logic_error(errMsg("encoder was not initialized yet"));
 
     if (!packet_) {
-        packet_ = av::PacketUPtr(av_packet_alloc());
+        packet_ = PacketUPtr(av_packet_alloc());
         if (!packet_) throw std::runtime_error(errMsg("failed to allocate packet"));
     }
 
