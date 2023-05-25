@@ -17,7 +17,7 @@ class Pipeline {
     const bool async_;
 
     std::array<bool, av::MediaType::NUM_TYPES> managed_types_{};
-    std::array<Decoder, av::MediaType::NUM_TYPES> decoders_;
+    std::array<av::Decoder, av::MediaType::NUM_TYPES> decoders_;
     std::array<Encoder, av::MediaType::NUM_TYPES> encoders_;
     std::array<Converter, av::MediaType::NUM_TYPES> converters_;
     av::Muxer muxer_;

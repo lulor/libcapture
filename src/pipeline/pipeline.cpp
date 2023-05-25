@@ -65,7 +65,7 @@ void Pipeline::initVideo(const av::Demuxer &demuxer, const AVCodecID codec_id, c
     managed_types_[type] = true;
 
     /* Init decoder */
-    decoders_[type] = Decoder(demuxer.getStreamParams(type));
+    decoders_[type] = av::Decoder(demuxer.getStreamParams(type));
 
     auto dec_ctx = decoders_[type].getContext();
     auto [width, height] = video_params.getVideoSize();
@@ -107,7 +107,7 @@ void Pipeline::initAudio(const av::Demuxer &demuxer, const AVCodecID codec_id) {
     managed_types_[type] = true;
 
     /* Init decoder */
-    decoders_[type] = Decoder(demuxer.getStreamParams(type));
+    decoders_[type] = av::Decoder(demuxer.getStreamParams(type));
 
     auto dec_ctx = decoders_[type].getContext();
 
@@ -141,7 +141,7 @@ void Pipeline::processPacket(const AVPacket *packet, const av::MediaType type) {
     assert(av::validMediaType(type));
     assert(managed_types_[type]);
 
-    Decoder &decoder = decoders_[type];
+    av::Decoder &decoder = decoders_[type];
     Converter &converter = converters_[type];
 
     bool decoder_received = false;
