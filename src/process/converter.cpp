@@ -134,9 +134,11 @@ av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *en
 
     {
         /* Endpoints for the filter graph. */
+
         FilterInOutUPtr outputs(avfilter_inout_alloc());
         if (!outputs) throw std::runtime_error(errMsg("failed to allocate filter outputs"));
         outputs->name = av_strdup("in");
+        if (!outputs->name) throw std::runtime_error(errMsg("failed to allocate filter output name"));
         outputs->filter_ctx = buffersrc_ctx_;
         outputs->pad_idx = 0;
         outputs->next = nullptr;
@@ -144,6 +146,7 @@ av::Converter::Converter(const AVCodecContext *dec_ctx, const AVCodecContext *en
         FilterInOutUPtr inputs(avfilter_inout_alloc());
         if (!inputs) throw std::runtime_error(errMsg("failed to allocate filter inputs"));
         inputs->name = av_strdup("out");
+        if (!inputs->name) throw std::runtime_error(errMsg("failed to allocate filter input name"));
         inputs->filter_ctx = buffersink_ctx_;
         inputs->pad_idx = 0;
         inputs->next = nullptr;
