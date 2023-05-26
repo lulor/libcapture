@@ -15,8 +15,7 @@ void swap(Demuxer &lhs, Demuxer &rhs) {
     std::swap(lhs.fmt_, rhs.fmt_);
     std::swap(lhs.device_name_, rhs.device_name_);
     std::swap(lhs.options_, rhs.options_);
-    std::swap(lhs.streams_[MediaType::Audio], rhs.streams_[MediaType::Audio]);
-    std::swap(lhs.streams_[MediaType::Video], rhs.streams_[MediaType::Video]);
+    for (auto type : validMediaTypes) std::swap(lhs.streams_[type], rhs.streams_[type]);
     std::swap(lhs.packet_, rhs.packet_);
 }
 }  // namespace av
