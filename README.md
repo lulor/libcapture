@@ -2,10 +2,10 @@
 
 <p align="center">
 <img alt="c++" src="https://img.shields.io/badge/C++-17-blue.svg?style=flat&logo=c%2B%2B"/> 
- <img alt="CI build" src="https://github.com/giulio98/libcapture/actions/workflows/linux_build.yml/badge.svg"/> 
-<img alt="CI build" src="https://github.com/giulio98/libcapture/actions/workflows/macos_build.yml/badge.svg"/> 
-<img alt="CI build" src="https://github.com/giulio98/libcapture/actions/workflows/windows_build.yml/badge.svg"/> 
- <img alt="License"  src="https://img.shields.io/github/license/giulio98/libcapture"/> 
+ <img alt="CI build" src="https://github.com/lulor/libcapture/actions/workflows/linux_build.yml/badge.svg"/> 
+<img alt="CI build" src="https://github.com/lulor/libcapture/actions/workflows/macos_build.yml/badge.svg"/> 
+<img alt="CI build" src="https://github.com/lulor/libcapture/actions/workflows/windows_build.yml/badge.svg"/> 
+ <img alt="License"  src="https://img.shields.io/github/license/lulor/libcapture"/> 
 </p> 
 
 
@@ -102,7 +102,7 @@ include(FetchContent)
 
 FetchContent_Declare(
         libcapture
-        GIT_REPOSITORY https://github.com/giulio98/libcapture.git
+        GIT_REPOSITORY https://github.com/lulor/libcapture.git
 )
 FetchContent_MakeAvailable(libcapture)
 add_executable(myexe main.cpp)
