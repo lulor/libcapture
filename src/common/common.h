@@ -24,22 +24,22 @@ namespace av {
 
 /**
  * Data types (Audio or Video).
- * WARNING: NumTypes is NOT a valid data type and it's only used to properly size data structures
+ * WARNING: NUM_TYPES is NOT a valid data type and it's only used to properly size data structures
  * in order to use Video and Audio as indices (DO NOT change the order)
  */
-enum MediaType { None = -1, Video, Audio, NumTypes };
+enum MediaType { None = -1, Video, Audio, NUM_TYPES };
 
 /**
  * Array of media types valid as indices
  */
-const std::array<MediaType, MediaType::NumTypes> validMediaTypes = {MediaType::Video, MediaType::Audio};
+const std::array<MediaType, MediaType::NUM_TYPES> validMediaTypes = {MediaType::Video, MediaType::Audio};
 
 /**
  * Whether the given type is valid
  * @param type the data type to check
  * @return whether the data type is a valid one
  */
-constexpr bool validMediaType(MediaType type) { return (type > MediaType::None && type < MediaType::NumTypes); }
+inline bool isMediaTypeValid(MediaType type) { return (type > MediaType::None && type < MediaType::NUM_TYPES); }
 
 using PacketUPtr = std::unique_ptr<AVPacket, DeleterPP<av_packet_free>>;
 using FrameUPtr = std::unique_ptr<AVFrame, DeleterPP<av_frame_free>>;

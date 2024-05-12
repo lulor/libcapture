@@ -19,7 +19,9 @@
 
 #define THROW_TEST_EXCEPTION 0  // TO-DO: remove
 
-static void makeAvVerbose(const bool verbose) {
+namespace {
+
+void makeAvVerbose(const bool verbose) {
     if (verbose) {
         av_log_set_level(AV_LOG_VERBOSE);
         // av_log_set_level(AV_LOG_DEBUG);
@@ -28,7 +30,7 @@ static void makeAvVerbose(const bool verbose) {
     }
 }
 
-static std::string getInputFormatName(bool audio = false) {
+std::string getInputFormatName(bool audio = false) {
 #if defined(LINUX)
     if (audio) {
         return "alsa";
@@ -42,8 +44,8 @@ static std::string getInputFormatName(bool audio = false) {
 #endif
 }
 
-static std::string generateInputDeviceName(const std::string &video_device, const std::string &audio_device,
-                                           const VideoParameters &video_params) {
+std::string generateInputDeviceName(const std::string &video_device, const std::string &audio_device,
+                                    const VideoParameters &video_params) {
     std::stringstream device_name_ss;
 #if defined(WINDOWS)
     if (!audio_device.empty()) device_name_ss << "audio=" << audio_device << ":";
@@ -65,7 +67,7 @@ static std::string generateInputDeviceName(const std::string &video_device, cons
 }
 
 #ifdef WINDOWS
-static void setDisplayResolution(int framerate) {
+void setDisplayResolution(int framerate) {
     int x1, y1, x2, y2, resolution_width, resolution_height;
     x1 = GetSystemMetrics(SM_XVIRTUALSCREEN);
     y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
@@ -97,7 +99,7 @@ static void setDisplayResolution(int framerate) {
 }
 #endif
 
-static std::map<std::string, std::string> generateDemuxerOptions(const VideoParameters &video_params) {
+std::map<std::string, std::string> generateDemuxerOptions(const VideoParameters &video_params) {
     std::map<std::string, std::string> demuxer_options;
 #ifdef WINDOWS
     setDisplayResolution(video_params.getFramerate());
@@ -124,6 +126,8 @@ static std::map<std::string, std::string> generateDemuxerOptions(const VideoPara
     return demuxer_options;
 }
 
+}  // namespace
+
 Capturer::Capturer(const bool verbose) : verbose_(verbose) {
     makeAvVerbose(verbose_);
     avdevice_register_all();
@@ -135,7 +139,7 @@ Capturer::~Capturer() {
 }
 
 void Capturer::stopCapture() {
-    std::lock_guard lg(m_);
+    const std::lock_guard lg(m_);
     stopped_ = true;
     cv_.notify_all();
 }
@@ -147,19 +151,19 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
     if (video_device.empty()) throw std::runtime_error("Video device not specified");
     if (output_file.empty()) throw std::runtime_error("Output file not specified");
 
-    bool capture_audio = !audio_device.empty();
+    const bool capture_audio = !audio_device.empty();
 
-    AVPixelFormat video_pix_fmt = AV_PIX_FMT_YUV420P;
-    AVCodecID video_codec_id = AV_CODEC_ID_H264;
-    AVCodecID audio_codec_id = AV_CODEC_ID_AAC;
+    const AVPixelFormat video_pix_fmt = AV_PIX_FMT_YUV420P;
+    const AVCodecID video_codec_id = AV_CODEC_ID_H264;
+    const AVCodecID audio_codec_id = AV_CODEC_ID_AAC;
 
-    Demuxer demuxer;
-    std::optional<Demuxer> audio_demuxer;  // Linux only
+    av::Demuxer demuxer;
+    std::optional<av::Demuxer> audio_demuxer;  // Linux only
 
     { /* init Demuxer */
         std::string device_name = generateInputDeviceName(video_device, audio_device, video_params);
         std::map<std::string, std::string> demuxer_options = generateDemuxerOptions(video_params);
-        demuxer = Demuxer(getInputFormatName(), std::move(device_name), std::move(demuxer_options));
+        demuxer = av::Demuxer(getInputFormatName(), std::move(device_name), std::move(demuxer_options));
         demuxer.openInput();
     }
 
@@ -172,7 +176,7 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
         async = capture_audio;
 #endif
         /* init Pipeline */
-        pipeline_ = std::make_unique<Pipeline>(output_file, async);
+        pipeline_ = std::make_unique<av::Pipeline>(output_file, async);
     }
 
     pipeline_->initVideo(demuxer, video_codec_id, video_pix_fmt, video_params);
@@ -183,7 +187,7 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
         /* init audio demuxer and pipeline */
         std::string audio_device_name = generateInputDeviceName("", audio_device, video_params);
         audio_demuxer =
-            Demuxer(getInputFormatName(true), std::move(audio_device_name), std::map<std::string, std::string>());
+            av::Demuxer(getInputFormatName(true), std::move(audio_device_name), std::map<std::string, std::string>());
         audio_demuxer->openInput();
         pipeline_->initAudio(*audio_demuxer, audio_codec_id);
 #else
@@ -214,7 +218,7 @@ std::future<void> Capturer::start(const std::string &video_device, const std::st
          * To avoid an immediate return from capture(), a lock on the mutex m_ must be acquired
          */
 
-        std::lock_guard lg(m_);
+        const std::lock_guard lg(m_);
 
         capturer_ = std::thread(
             [this, demuxer = std::move(demuxer), audio_demuxer = std::move(audio_demuxer), p = std::move(p)]() mutable {
@@ -250,7 +254,7 @@ void Capturer::stop() {
 void Capturer::pause() {
     if (stopped_) throw std::runtime_error("Failed to pause the recording: capturer is stopped");
     if (paused_) throw std::runtime_error("Failed to pause the recording: capturer already paused");
-    std::lock_guard lg(m_);
+    const std::lock_guard lg(m_);
     paused_ = true;
     cv_.notify_all();
 }
@@ -258,20 +262,20 @@ void Capturer::pause() {
 void Capturer::resume() {
     if (stopped_) throw std::runtime_error("Failed to resume the recording: capturer is stopped");
     if (!paused_) throw std::runtime_error("Failed to resume the recording: capturer already running");
-    std::lock_guard lg(m_);
+    const std::lock_guard lg(m_);
     paused_ = false;
     cv_.notify_all();
 }
 
-void Capturer::capture(Demuxer &video_demuxer, Demuxer &audio_demuxer) {
+void Capturer::capture(av::Demuxer &video_demuxer, av::Demuxer &audio_demuxer) {
     std::thread audio_capturer;
     std::exception_ptr e_ptr;
 
     {
-        ThreadGuard tg(audio_capturer);
+        const ThreadGuard tg(audio_capturer);
 
         audio_capturer = std::thread(
-            [this, &e_ptr](Demuxer &audio_demuxer) {
+            [this, &e_ptr](av::Demuxer &audio_demuxer) {
                 try {
                     capture(audio_demuxer);
                 } catch (...) {
@@ -292,12 +296,12 @@ void Capturer::capture(Demuxer &video_demuxer, Demuxer &audio_demuxer) {
     if (e_ptr) std::rethrow_exception(e_ptr);
 }
 
-void Capturer::capture(Demuxer &demuxer) {
+void Capturer::capture(av::Demuxer &demuxer) {
     bool after_pause;
     int64_t last_pts = 0;
     int64_t pts_offset = 0;
     bool adjust_pts_offset = false;
-    std::chrono::milliseconds sleep_interval(1);
+    const std::chrono::milliseconds sleep_interval(1);
 
 #if THROW_TEST_EXCEPTION
     int counter = 0;
@@ -328,7 +332,7 @@ void Capturer::capture(Demuxer &demuxer) {
             std::this_thread::sleep_for(sleep_interval);
             continue;
         }
-        if (!av::validMediaType(packet_type)) throw std::runtime_error("Invalid packet type received from demuxer");
+        if (!av::isMediaTypeValid(packet_type)) throw std::runtime_error("Invalid packet type received from demuxer");
 
         if (adjust_pts_offset) pts_offset += (packet->pts - last_pts);
         last_pts = packet->pts;
@@ -351,7 +355,7 @@ void Capturer::setVerbose(const bool verbose) {
 }
 
 void Capturer::listAvailableDevices() const {
-    std::string dummy_device_name;
+    const std::string dummy_device_name;
     std::map<std::string, std::string> options;
     options.insert({"list_devices", "true"});
 
@@ -359,10 +363,10 @@ void Capturer::listAvailableDevices() const {
     dummy_device_name = "dummy";
 #endif
 
-    Demuxer demuxer(getInputFormatName(), dummy_device_name, options);
+    av::Demuxer demuxer(getInputFormatName(), dummy_device_name, options);
     std::cout << "##### Available Devices #####" << std::endl;
     {
-        LogLevelSetter lls(AV_LOG_INFO);
+        const LogLevelSetter lls(AV_LOG_INFO);
         demuxer.openInput(true);
     }
     std::cout << std::endl;

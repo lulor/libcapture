@@ -5,14 +5,16 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Encoder {
 #ifdef FFMPEG_5
     const AVCodec *codec_{};
 #else  // FFmpeg 4
     AVCodec *codec_{};
 #endif
-    av::CodecContextUPtr codec_ctx_;
-    av::PacketUPtr packet_;
+    CodecContextUPtr codec_ctx_;
+    PacketUPtr packet_;
 
     friend void swap(Encoder &lhs, Encoder &rhs);
 
@@ -38,14 +40,18 @@ public:
      * Create a new AUDIO encoder
      * @param codec_id              the ID of the codec to which encode the frames
      * @param sample_rate           the sample rate of the audio to encode
-     * @param channnel_layout       the channel layout of the frames to encode (if unknown, it can be obtained by
-     * calling av_get_default_channel_layout(num_channels))
+     * @param channnel_layout       an observer pointer to the channel layout to utilize
      * @param global_header_flags   the global header flags of the output format to which the encoded frames will be
      * sent
      * @param options               a map filled with the key-value options to use for the encoder
      */
+#ifdef FFMPEG_5
+    Encoder(AVCodecID codec_id, int sample_rate, const AVChannelLayout *channel_layout, int global_header_flags,
+            const std::map<std::string, std::string> &options);
+#else
     Encoder(AVCodecID codec_id, int sample_rate, uint64_t channel_layout, int global_header_flags,
             const std::map<std::string, std::string> &options);
+#endif
 
     /**
      * Create a new VIDEO encoder
@@ -82,7 +88,7 @@ public:
      * @return a packet if it was possible to get it, nullptr if the encoder had nothing to write
      * because it is empty or flushed
      */
-    av::PacketUPtr getPacket();
+    PacketUPtr getPacket();
 
     /**
      * Access the internal codec context
@@ -95,3 +101,5 @@ public:
      */
     [[nodiscard]] std::string getName() const;
 };
+
+}

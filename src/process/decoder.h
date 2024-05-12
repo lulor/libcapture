@@ -4,14 +4,16 @@
 
 #include "common/common.h"
 
+namespace av {
+
 class Decoder {
 #ifdef FFMPEG_5
     const AVCodec *codec_{};
 #else  // FFmpeg 4
     AVCodec *codec_{};
 #endif
-    av::CodecContextUPtr codec_ctx_;
-    av::FrameUPtr frame_;
+    CodecContextUPtr codec_ctx_;
+    FrameUPtr frame_;
 
     friend void swap(Decoder &lhs, Decoder &rhs);
 
@@ -45,7 +47,7 @@ public:
      * @return a frame if it was possible to get it, nullptr if the decoder had nothing to write
      * because it is empty or flushed
      */
-    av::FrameUPtr getFrame();
+    FrameUPtr getFrame();
 
     /**
      * Access the internal codec context
@@ -59,3 +61,5 @@ public:
      */
     [[nodiscard]] std::string getName() const;
 };
+
+}  // namespace av

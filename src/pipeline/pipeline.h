@@ -13,31 +13,33 @@
 #include "process/encoder.h"
 #include "video_parameters.h"
 
+namespace av {
+
 class Pipeline {
     const bool async_;
 
-    std::array<bool, av::MediaType::NumTypes> managed_types_{};
-    std::array<Decoder, av::MediaType::NumTypes> decoders_;
-    std::array<Encoder, av::MediaType::NumTypes> encoders_;
-    std::array<Converter, av::MediaType::NumTypes> converters_;
+    std::array<bool, MediaType::NUM_TYPES> managed_types_{};
+    std::array<Decoder, MediaType::NUM_TYPES> decoders_;
+    std::array<Encoder, MediaType::NUM_TYPES> encoders_;
+    std::array<Converter, MediaType::NUM_TYPES> converters_;
     Muxer muxer_;
     std::mutex muxer_m_;
 
     bool terminated_{};
 
     std::mutex processors_m_;
-    std::array<std::thread, av::MediaType::NumTypes> processors_;
-    std::array<av::PacketUPtr, av::MediaType::NumTypes> packets_;
-    std::array<std::condition_variable, av::MediaType::NumTypes> packets_cv_;
-    std::array<std::exception_ptr, av::MediaType::NumTypes> e_ptrs_;
-    void startProcessor(av::MediaType media_type);
+    std::array<std::thread, MediaType::NUM_TYPES> processors_;
+    std::array<PacketUPtr, MediaType::NUM_TYPES> packets_;
+    std::array<std::condition_variable, MediaType::NUM_TYPES> packets_cv_;
+    std::array<std::exception_ptr, MediaType::NUM_TYPES> e_ptrs_;
+    void startProcessor(MediaType media_type);
     /* Stop and join the processor threads */
     void stopProcessors();
     /* Check and eventually re-throw the processors exceptions */
     void checkExceptions();
 
-    void processPacket(const AVPacket *packet, av::MediaType type);
-    void processConvertedFrame(const AVFrame *frame, av::MediaType type);
+    void processPacket(const AVPacket *packet, MediaType type);
+    void processConvertedFrame(const AVFrame *frame, MediaType type);
 
 public:
     /**
@@ -87,7 +89,7 @@ public:
      * @param packet        the packet to send to che processing chain (if NULL, an exception will be thrown)
      * @param packet_type   the type of the packet to process
      */
-    void feed(av::PacketUPtr packet, av::MediaType packet_type);
+    void feed(PacketUPtr packet, MediaType packet_type);
 
     /**
      * Flush the processing pipelines and close the output file.
@@ -99,3 +101,5 @@ public:
      */
     void printInfo() const;
 };
+
+}  // namespace av
